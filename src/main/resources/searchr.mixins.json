@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "dev.cerus.searchr.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ChatScreenMixin",
+    "TextFieldWidgetMixin",
+    "ChatInputSuggestorMixin",
+    "CommandHistoryManagerMixin",
+    "ChatHudMixin",
+    "KeyBindingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

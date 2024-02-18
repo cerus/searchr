@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "searchr",
+  "version": "${version}",
+  "name": "Searchr",
+  "description": "Reverse-search ported from your favourite shell to Minecraft",
+  "authors": [
+    "Cerus"
+  ],
+  "contact": {
+    "email": "max@cerus.dev",
+    "homepage": "https://cerus.dev/",
+    "sources": "https://github.com/cerus/searchr",
+    "issues": "https://github.com/cerus/searchr/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/searchr/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.cerus.searchr.Searchr"
+    ],
+    "modmenu": [
+      "dev.cerus.searchr.integration.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "searchr.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.3",
+    "minecraft": "~1.20.4",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "cloth-config": "*",
+    "mod-menu": "*"
+  }
+}
