@@ -36,4 +36,15 @@ public class SimpleHistorySearch implements HistorySearch {
         return matching.get(offset % matching.size());
     }
 
+    private <T> void distinct(final List<T> list) {
+        final List<T> copy = List.copyOf(list);
+        for (final T element : copy) {
+            final int lastIdx = list.lastIndexOf(element);
+            int idx;
+            while ((idx = list.indexOf(element)) != lastIdx) {
+                list.remove(idx);
+            }
+        }
+    }
+
 }
