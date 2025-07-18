@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,30 +45,34 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
     @Shadow
     public abstract void setCursorToEnd(boolean shiftKeyPressed);
 
+    @Shadow
+    private int textY;
+
     @Inject(
             method = "renderWidget(Lnet/minecraft/client/gui/DrawContext;IIF)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I", shift = At.Shift.AFTER),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
     private void injectOnRenderWidget(final DrawContext context, final int mouseX, final int mouseY, final float delta, final CallbackInfo ci,
-                                      final int $$5, final int $$6, final String $$7, final boolean $$8, final boolean $$9, final int $$10, final int $$11) {
+                                      final int $$5, final int $$6, final String $$7, final boolean $$8, final boolean $$9, final int $$10) {
         if (this.searchEnabled) {
-            final int k = $$10; // See local k of TextFieldWidget#render()
-            final int l = $$11; // See local l of TextFieldWidget#render()
+            final int posX = $$10; // See local k of TextFieldWidget#render()
+            final int posY = this.textY;
+            
 
             if (this.suggestion == null) {
                 if (this.text.isEmpty()) {
                     // Show placeholder
-                    context.drawTextWithShadow(this.textRenderer, Text.translatable("text.searchr.typeToSearch"), k, l, this.config.colors.colorPlaceholder | MASK);
+                    context.drawTextWithShadow(this.textRenderer, Text.translatable("text.searchr.typeToSearch"), posX, posY, this.config.colors.colorPlaceholder | MASK);
                 } else {
                     // Show not found
                     final Text infoText = Text.empty().append(Text.translatable("text.searchr.notFound")).append(" ");
-                    context.drawTextWithShadow(this.textRenderer, infoText, k, l, this.config.colors.colorNotFoundPrefix | MASK);
-                    context.drawTextWithShadow(this.textRenderer, this.text, k + 1 + this.textRenderer.getWidth(infoText), l, this.config.colors.colorNotFoundSuffix | MASK);
+                    context.drawTextWithShadow(this.textRenderer, infoText, posX, posY, this.config.colors.colorNotFoundPrefix | MASK);
+                    context.drawTextWithShadow(this.textRenderer, this.text, posX + 1 + this.textRenderer.getWidth(infoText), posY, this.config.colors.colorNotFoundSuffix | MASK);
                 }
             } else {
                 // Draw search result
-                context.drawTextWithShadow(this.textRenderer, this.suggestion, k, l, this.config.colors.colorSearch | MASK);
+                context.drawTextWithShadow(this.textRenderer, this.suggestion, posX, posY, this.config.colors.colorSearch | MASK);
 
                 if (this.text != null && !this.text.isBlank()) {
                     final int start = this.suggestionLower.indexOf(this.textLower);
@@ -76,9 +81,9 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
                     }
 
                     // Draw highlighter
-                    final int startOffset = this.textRenderer.getWidth(this.suggestion.substring(0, start)) + k;
+                    final int startOffset = this.textRenderer.getWidth(this.suggestion.substring(0, start)) + posX;
                     final int lineWidth = this.textRenderer.getWidth(this.text);
-                    context.drawHorizontalLine(startOffset, startOffset + lineWidth, l + this.textRenderer.fontHeight, this.config.colors.colorSearchHighlight | MASK);
+                    context.drawHorizontalLine(startOffset, startOffset + lineWidth, posY + this.textRenderer.fontHeight, this.config.colors.colorSearchHighlight | MASK);
                 }
             }
         }
