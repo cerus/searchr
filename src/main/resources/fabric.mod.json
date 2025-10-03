@@ -28,8 +28,8 @@
     "searchr.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.15.10",
-    "minecraft": "~1.21.6",
+    "fabricloader": ">=0.17.2",
+    "minecraft": "~1.21.9",
     "java": ">=21",
     "fabric-api": "*"
   },

@@ -8,6 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 
 import org.lwjgl.glfw.GLFW;
@@ -28,6 +29,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
 
     @Shadow private TextRenderer textRenderer;
     @Shadow private String text;
+    @Shadow private int textY;
 
     private ModConfig config;
     private boolean searchEnabled;
@@ -45,9 +47,6 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
     @Shadow
     public abstract void setCursorToEnd(boolean shiftKeyPressed);
 
-    @Shadow
-    private int textY;
-
     @Inject(
             method = "renderWidget(Lnet/minecraft/client/gui/DrawContext;IIF)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I", shift = At.Shift.AFTER),
@@ -58,7 +57,6 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
         if (this.searchEnabled) {
             final int posX = $$10; // See local k of TextFieldWidget#render()
             final int posY = this.textY;
-            
 
             if (this.suggestion == null) {
                 if (this.text.isEmpty()) {
@@ -89,15 +87,16 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
         }
     }
 
-    @Inject(method = "keyPressed(III)Z", at = @At("HEAD"), cancellable = true)
-    public void injectOnKeyPressed(final int keyCode, final int scanCode, final int modifiers, final CallbackInfoReturnable<Boolean> ci) {
+    @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyInput;)Z", at = @At("HEAD"), cancellable = true)
+    public void injectOnKeyPressed(final KeyInput keyInput, final CallbackInfoReturnable<Boolean> ci) {
         // Block a bunch of special keys while search is enabled
+        int keyCode = keyInput.key();
         if (this.isSearchEnabled() && (keyCode == GLFW.GLFW_KEY_LEFT
                                        || keyCode == GLFW.GLFW_KEY_RIGHT
                                        || keyCode == GLFW.GLFW_KEY_HOME
                                        || keyCode == GLFW.GLFW_KEY_END
-                                       || Screen.isSelectAll(keyCode)
-                                       || Screen.isPaste(keyCode))) {
+                                       || keyInput.isSelectAll()
+                                       || keyInput.isPaste())) {
             ci.setReturnValue(true);
         }
     }

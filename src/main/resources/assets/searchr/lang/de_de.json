@@ -1,7 +1,7 @@
 {
   "text.searchr.typeToSearch": "Suche eingeben",
   "text.searchr.notFound": "Nicht gefunden:",
-  "category.searchr": "Searchr",
+  "key.category.searchr.searchr": "Searchr",
   "key.searchr.activate": "Suche aktivieren",
   "text.autoconfig.searchr.option.colors": "Farben",
   "text.autoconfig.searchr.option.colors.@Tooltip": "Einstellungen für Farben.",
