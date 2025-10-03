@@ -8,6 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +28,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
 
     @Shadow private TextRenderer textRenderer;
     @Shadow private String text;
+    @Shadow private int textY;
 
     private ModConfig config;
     private boolean searchEnabled;
@@ -50,24 +52,23 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
             locals = LocalCapture.CAPTURE_FAILHARD
     )
     private void injectOnRenderWidget(final DrawContext context, final int mouseX, final int mouseY, final float delta, final CallbackInfo ci,
-                                      final int $$5, final int $$6, final String $$7, final boolean $$8, final boolean $$9, final int $$10, final int $$11) {
+                                      final int $$5, final int $$6, final String $$7, final boolean $$8, final boolean $$9, final int $$10) {
         if (this.searchEnabled) {
             final int k = $$10; // See local k of TextFieldWidget#render()
-            final int l = $$11; // See local l of TextFieldWidget#render()
 
             if (this.suggestion == null) {
                 if (this.text.isEmpty()) {
                     // Show placeholder
-                    context.drawTextWithShadow(this.textRenderer, Text.translatable("text.searchr.typeToSearch"), k, l, this.config.colors.colorPlaceholder | MASK);
+                    context.drawTextWithShadow(this.textRenderer, Text.translatable("text.searchr.typeToSearch"), k, textY, this.config.colors.colorPlaceholder | MASK);
                 } else {
                     // Show not found
                     final Text infoText = Text.empty().append(Text.translatable("text.searchr.notFound")).append(" ");
-                    context.drawTextWithShadow(this.textRenderer, infoText, k, l, this.config.colors.colorNotFoundPrefix | MASK);
-                    context.drawTextWithShadow(this.textRenderer, this.text, k + 1 + this.textRenderer.getWidth(infoText), l, this.config.colors.colorNotFoundSuffix | MASK);
+                    context.drawTextWithShadow(this.textRenderer, infoText, k, textY, this.config.colors.colorNotFoundPrefix | MASK);
+                    context.drawTextWithShadow(this.textRenderer, this.text, k + 1 + this.textRenderer.getWidth(infoText), textY, this.config.colors.colorNotFoundSuffix | MASK);
                 }
             } else {
                 // Draw search result
-                context.drawTextWithShadow(this.textRenderer, this.suggestion, k, l, this.config.colors.colorSearch | MASK);
+                context.drawTextWithShadow(this.textRenderer, this.suggestion, k, textY, this.config.colors.colorSearch | MASK);
 
                 if (this.text != null && !this.text.isBlank()) {
                     final int start = this.suggestionLower.indexOf(this.textLower);
@@ -78,21 +79,22 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget implements Se
                     // Draw highlighter
                     final int startOffset = this.textRenderer.getWidth(this.suggestion.substring(0, start)) + k;
                     final int lineWidth = this.textRenderer.getWidth(this.text);
-                    context.drawHorizontalLine(startOffset, startOffset + lineWidth, l + this.textRenderer.fontHeight, this.config.colors.colorSearchHighlight | MASK);
+                    context.drawHorizontalLine(startOffset, startOffset + lineWidth, textY + this.textRenderer.fontHeight, this.config.colors.colorSearchHighlight | MASK);
                 }
             }
         }
     }
 
-    @Inject(method = "keyPressed(III)Z", at = @At("HEAD"), cancellable = true)
-    public void injectOnKeyPressed(final int keyCode, final int scanCode, final int modifiers, final CallbackInfoReturnable<Boolean> ci) {
+    @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyInput;)Z", at = @At("HEAD"), cancellable = true)
+    public void injectOnKeyPressed(final KeyInput keyInput, final CallbackInfoReturnable<Boolean> ci) {
         // Block a bunch of special keys while search is enabled
+        int keyCode = keyInput.key();
         if (this.isSearchEnabled() && (keyCode == GLFW.GLFW_KEY_LEFT
                                        || keyCode == GLFW.GLFW_KEY_RIGHT
                                        || keyCode == GLFW.GLFW_KEY_HOME
                                        || keyCode == GLFW.GLFW_KEY_END
-                                       || Screen.isSelectAll(keyCode)
-                                       || Screen.isPaste(keyCode))) {
+                                       || keyInput.isSelectAll()
+                                       || keyInput.isPaste())) {
             ci.setReturnValue(true);
         }
     }

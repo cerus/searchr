@@ -12,6 +12,8 @@ import net.minecraft.client.gui.screen.ChatInputSuggestor;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,9 +49,10 @@ public class ChatScreenMixin extends Screen implements Searchable {
         ((Configurable) this.chatField).setConfig(this.config);
     }
 
-    @Inject(method = "keyPressed(III)Z", at = @At("HEAD"), cancellable = true)
-    public void injectOnKeyPress(final int keyCode, final int scanCode, final int modifiers, final CallbackInfoReturnable<Boolean> ci) {
-        if (KeyBinds.ACTIVATE.wasPressed(keyCode)) {
+    @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyInput;)Z", at = @At("HEAD"), cancellable = true)
+    public void injectOnKeyPress(final KeyInput keyInput, final CallbackInfoReturnable<Boolean> ci) {
+        int keyCode = keyInput.key();
+        if (KeyBinds.ACTIVATE.wasPressed(keyInput)) {
             if (!this.isSearchEnabled()) {
                 this.enableSearch();
             } else {
@@ -58,7 +61,7 @@ public class ChatScreenMixin extends Screen implements Searchable {
                 this.updateSuggestion(this.chatField.getText());
             }
             ci.setReturnValue(true);
-        } else if (this.shouldExit(keyCode) && this.isSearchEnabled()) {
+        } else if (this.shouldExit(keyInput) && this.isSearchEnabled()) {
             // Exit search without keeping any text
             this.disableSearch();
             this.chatField.setText("");
@@ -74,8 +77,9 @@ public class ChatScreenMixin extends Screen implements Searchable {
         }
     }
 
-    private boolean shouldExit(final int keyCode) {
-        final boolean ctrlC = this.config.keys.allowCtrlC && keyCode == GLFW.GLFW_KEY_C && Screen.hasControlDown();
+    private boolean shouldExit(final KeyInput keyInput) {
+        final int keyCode = keyInput.key();
+        final boolean ctrlC = this.config.keys.allowCtrlC && keyCode == GLFW.GLFW_KEY_C && keyInput.hasCtrl();
         final boolean normalExit = keyCode == GLFW.GLFW_KEY_ESCAPE;
         return normalExit || ctrlC;
     }
